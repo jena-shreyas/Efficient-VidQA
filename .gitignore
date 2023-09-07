@@ -1,0 +1,9 @@
+mask_based_features.zip
+dataset3/
+dataset4/
+
+CRIPP-VQA/Aloe-star/data/mask_based_features
+CRIPP-VQA/Aloe-star/data/*.csv
+CRIPP-VQA/Aloe-star/data/*.json
+
+CRIPP-VQA/Aloe-star/logs/
