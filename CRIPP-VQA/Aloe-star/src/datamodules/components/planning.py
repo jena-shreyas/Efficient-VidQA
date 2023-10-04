@@ -77,18 +77,27 @@ class planning_dataset(Dataset):
     
     def get_counterfactual_data(self, qa_file, qa_type):
         self.qa_data = os.listdir(qa_file)
+        print(qa_file)
+        print(len(self.qa_data))
+        print()
 
         for i in range(len(self.qa_data)):
+            
             if (
                 int(self.qa_data[i].split(".")[0].split("_")[-1])
                 not in self.extra_check
             ):
                 self.loading_issues += 1
                 continue
+
+            # print(self.qa_data[i].split(".")[0].split("_")[-1])
+
             if int(self.qa_data[i].split(".")[0].split("_")[-1]) >= self.filter[0] and int(self.qa_data[i].split(".")[0].split("_")[-1]) < self.filter[1]:
                 pass
             else:
                 continue
+
+            # print(self.qa_data[i].split(".")[0].split("_")[-1])
 
             if self.qa_data[i].split(".")[0].split("_")[-1] not in self.metaqa:
                 self.metaqa[self.qa_data[i].split(".")[0].split("_")[-1]] = []
@@ -96,9 +105,13 @@ class planning_dataset(Dataset):
             try:
                 with open(os.path.join(qa_file, self.qa_data[i]), "rb") as handle:
                     tmp_data_ = pickle.load(handle)
-            except:
+            except Exception as e:
+                # print(e)
+                # print()
                 self.loading_issues += 1
                 continue
+
+            
 
             for j in range(len(tmp_data_["questions"][0])):
                 q_ = tmp_data_["questions"][0][j]

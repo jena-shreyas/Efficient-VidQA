@@ -1,14 +1,14 @@
 from typing import Any, List
 
 import torch
+import torch.nn as nn
 from pytorch_lightning import LightningModule
 from torchmetrics import MaxMetric
 from torchmetrics.classification.accuracy import Accuracy
 
-from src.models.hug_bert_large import *
-from src.models.modeling_t5 import *
-from src.models.configuration_t5 import T5Config
-from src.models.aloe_module_descriptive import AloeModule as PreTrainedAloe
+from .modeling_t5 import *
+from .configuration_t5 import T5Config
+from .aloe_t5_desc import AloeModule as PreTrainedAloe
 import torch.nn.functional as F
 import transformers
 
@@ -60,7 +60,7 @@ class AloeModule(LightningModule):
         # it also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
 
-        self.model = BertModel(BertConfig()) # BertModel(BertConfig(**model_args["huggingface"]))
+        self.model = T5EncoderModel(T5Config()) # BertModel(BertConfig(**model_args["huggingface"]))
         self.model_dc = descriptive(model_args["huggingface"]["trasnformer"]["hidden"], model_args['max_labels'])
         self.model_mc = multichoice(model_args["huggingface"]["trasnformer"]["hidden"], max_labels=2)
 
@@ -70,15 +70,15 @@ class AloeModule(LightningModule):
             self.model.load_state_dict(model2del.model.state_dict())
             self.model_dc.load_state_dict(model2del.model_dc.state_dict())
             del model2del
-        else:
+        else: 
             logging.warn("Models are initialized randomly. This might affect the performance.")
 
         
-        # pre-trained BERT model
-        self.bert = transformers.BertModel.from_pretrained("bert-base-uncased")
+        # pre-trained T5 model
+        self.t5 = transformers.T5EncoderModel.from_pretrained("t5-large")
         
         ## TODO: Play with finetuning bert
-        for name, param in self.bert.named_parameters():
+        for name, param in self.t5.named_parameters():
             param.requires_grad = False
 
         # loss function
@@ -94,11 +94,11 @@ class AloeModule(LightningModule):
         self.val_acc_best = MaxMetric()
 
     def forward(self, text_embd: torch.Tensor, visuals_emdb: torch.Tensor, optimizer_idx: int = 0):
-        bert_out = self.model(inputs_embeds=text_embd, attention_mask=None, visual_embd=visuals_emdb)
+        t5_out = self.model(inputs_embeds=text_embd, attention_mask=None, visual_embd=visuals_emdb)
         if optimizer_idx==1:
-            outputs = self.model_mc(bert_out.last_hidden_state[:, 0])
+            outputs = self.model_mc(t5_out.last_hidden_state[:, 0])
         else:
-            outputs = self.model_dc(bert_out.last_hidden_state[:, 0])
+            outputs = self.model_dc(t5_out.last_hidden_state[:, 0])
         return outputs
 
     def on_train_start(self):
@@ -109,7 +109,7 @@ class AloeModule(LightningModule):
     def step(self, batch: Any):
         visuals, question, target1 = batch["descriptive"]
         with torch.no_grad():
-            text_embd = self.bert(question["ids"], question["mask"]).last_hidden_state
+            text_embd = self.t5(question["ids"], question["mask"]).last_hidden_state
         logits1 = self.forward(text_embd=text_embd, visuals_emdb=visuals, optimizer_idx=0)
         
         loss1 = self.criterion(logits1, target1)
@@ -118,7 +118,7 @@ class AloeModule(LightningModule):
 
         visuals, question, target2 = batch["counterfactual"]
         with torch.no_grad():
-            text_embd = self.bert(question["ids"], question["mask"]).last_hidden_state
+            text_embd = self.t5(question["ids"], question["mask"]).last_hidden_state
         logits2 = self.forward(text_embd=text_embd, visuals_emdb=visuals, optimizer_idx=1)
         
         loss2 = self.criterion(logits2, target2)

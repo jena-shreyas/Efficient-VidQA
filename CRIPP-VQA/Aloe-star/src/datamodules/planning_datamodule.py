@@ -34,6 +34,7 @@ class PlanningDataModule(LightningDataModule):
         self.data_val: Optional[Dataset] = None
         self.data_test: Optional[Dataset] = None
         self.check_answer_map()
+        self.prepare_data()  # ADDED !!
 
     @property
     def num_classes(self) -> int:
@@ -44,15 +45,15 @@ class PlanningDataModule(LightningDataModule):
         """
         self.qa_files = [
             [
-                os.path.join(self.hparams.counterfactual_path, "planning_remove_flt_v6"),
+                os.path.join(self.hparams.data_dir, self.hparams.counterfactual_path, "planning_remove_flt_v6"),
                 "planning-remove",
             ],
             [
-                os.path.join(self.hparams.counterfactual_path, "planning_replace_flt_v6"),
+                os.path.join(self.hparams.data_dir, self.hparams.counterfactual_path, "planning_replace_flt_v6"),
                 "planning-replace",
             ],
             [
-                os.path.join(self.hparams.counterfactual_path, "planning_add_flt_v6"),
+                os.path.join(self.hparams.data_dir, self.hparams.counterfactual_path, "planning_add_flt_v6"),
                 "planning-add",
             ],
         ]
@@ -122,7 +123,7 @@ class PlanningDataModule(LightningDataModule):
             self.data_train = planning_dataset(
                 config=self.hparams.config["huggingface"], 
                 answer_map=self.answer_map,  
-                monet_dir=self.hparams.monet_feature_path,
+                monet_dir=os.path.join(self.hparams.data_dir, self.hparams.monet_feature_path),
                 annot_dir="",
                 qa_files=self.qa_files,
                 filter=[0,4000],
@@ -131,7 +132,7 @@ class PlanningDataModule(LightningDataModule):
             self.data_val = planning_dataset(
                 config=self.hparams.config["huggingface"], 
                 answer_map=self.answer_map,  
-                monet_dir=self.hparams.monet_feature_path,
+                monet_dir=os.path.join(self.hparams.data_dir, self.hparams.monet_feature_path),
                 annot_dir="",
                 qa_files=self.qa_files,
                 filter=[4001,4500],
@@ -140,7 +141,7 @@ class PlanningDataModule(LightningDataModule):
             self.data_test = planning_dataset(
                 config=self.hparams.config["huggingface"], 
                 answer_map=self.answer_map,  
-                monet_dir=self.hparams.monet_feature_path,
+                monet_dir=os.path.join(self.hparams.data_dir, self.hparams.monet_feature_path),
                 annot_dir="",
                 qa_files=self.qa_files,
                 filter=[4501,5000],

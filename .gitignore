@@ -7,3 +7,8 @@ CRIPP-VQA/Aloe-star/data/*.csv
 CRIPP-VQA/Aloe-star/data/*.json
 
 CRIPP-VQA/Aloe-star/logs/
+
+CLEVRER/
+CLEVRER/dataset*
+CLEVRER/outputs/
+CLEVRER/video_*

@@ -7,7 +7,7 @@ model_args:
   huggingface:
     embedding:
       special_tokens: 2
-      max_position_embeddings: 650 # 270
+      max_position_embeddings: 270 # 270
       max_frame_embeddings: 25
       type_vocab_size: 4 # vision+text+special
       x_axis_embedding: 512
@@ -31,7 +31,7 @@ model_args:
       dropout: 0.1
 
     bert:
-      max_len: 450 # 45
+      max_len: 45 # 45
       hidden_size: 768
       
     monet:
